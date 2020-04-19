@@ -151,8 +151,29 @@ const UIController = (function(){
         expensesLabel: '.budget__expenses--value',
         percentageLabel: ".budget__expenses--percentage",
         container: '.container',
-        expensesPercLabel: ".item__percentage"
-    }
+        expensesPercLabel: ".item__percentage",
+        dateLabel: ".budget__title--month"
+    };
+
+    const formatNumber = function(num, type){
+        let numSplit, int, dec, sign;
+        //+/- before the number, two decimal points and a comma separating the thousands
+        num = Math.abs(num);
+        num = num.toFixed(2);
+
+        numSplit = num.split('.');
+
+        int = numSplit[0];
+
+        if(int.length > 3){
+            int = int.substr(0, int.length -3) + ',' + int.substr(int.length -3, 3);
+            //input 23100, output 23,100
+        }
+
+        dec = numSplit[1];
+
+        return (type === 'exp' ? "-" : "+") + ' ' + int + '.' + dec;
+    };
 
 return{
     getInput: function(){
@@ -178,7 +199,7 @@ return{
     //replace placeholder with data
     newHtml = html.replace("%id%", obj.id);
     newHtml = newHtml.replace('%description%', obj.description);
-    newHtml = newHtml.replace('%value%', obj.value);
+    newHtml = newHtml.replace('%value%',formatNumber(obj.value, type));
 
     //insert the HTML into the DOM
     document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);
@@ -207,9 +228,11 @@ return{
 
     //This function updates the labels at the top of the app
     displayBudget: function(obj){
-        document.querySelector(DOMstrings.budgetLabel).textContent = '$' + obj.budget;
-        document.querySelector(DOMstrings.incomeLabel).textContent = obj.totalInc;
-        document.querySelector(DOMstrings.expensesLabel).textContent = obj.totalExp;
+
+        obj.budget > 0 ? type = 'inc' : type = 'exp';
+        document.querySelector(DOMstrings.budgetLabel).textContent = formatNumber(obj.budget, type);
+        document.querySelector(DOMstrings.incomeLabel).textContent = formatNumber(obj.totalInc, 'inc');
+        document.querySelector(DOMstrings.expensesLabel).textContent = formatNumber(obj.totalExp, 'exp');
 
         if(obj.percentage > 0){
             document.querySelector(DOMstrings.percentageLabel).textContent = obj.percentage + '%';
@@ -238,10 +261,16 @@ return{
         });
     },
 
-    formatNumber: function(num, type){
-        //+/- before the number, two decimal points and a comma separating the thousands
-        num = Math.abs(num);
-        num = num.toFixed(2);
+    displayMonth: function(){
+        let now, months, month, year;
+
+        now = new Date();
+
+        months = ['Jan', 'Feb', 'March', 'April', 'May', 'Jun', "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
+        month = now.getMonth();
+        year = now.getFullYear();
+
+        document.querySelector(DOMstrings.dateLabel).textContent = months[month] + " " + year ;
     },
 
     getDOMstrings : function(){
@@ -351,6 +380,7 @@ const ctrlDeleteItem = function(event){
     return {
         init: function(){
             console.log('App Started!')
+            UIctrl.displayMonth();
             UIctrl.displayBudget({
                 budget: 0,
                 totalInc: 0,
